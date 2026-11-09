@@ -11,6 +11,12 @@ response <- GET(url)
 data <- content(response, as = "text", encoding = "UTF-8")
 genes <- fromJSON(data)$genes
 
+# Crear el directorio results/data/ si no existe
+dir.create("results/data", recursive = TRUE, showWarnings = FALSE)
+
+# Guardar los genes en un archivo de texto separado por tabuladores
+write.table(genes, file = "results/data/hpo_gene.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
 # Número total de genes
 cat("Total de genes obtenidos:", nrow(genes), "\n\n")
 # Primeros genes
