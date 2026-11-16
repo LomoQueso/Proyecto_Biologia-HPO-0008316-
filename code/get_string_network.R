@@ -42,6 +42,7 @@ interaction_network$to <- string_ids$name[match(interaction_network$to, string_i
 
 # Guardar la red en results/data/string_network.txt
 write.table(interaction_network, file = "results/data/string_network.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(string_ids, file = "results/data/string_ids.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 
 # Resumen de ejecución en la terminal
 cat("Total de interacciones encontradas:", nrow(interaction_network), "\n\n")
