@@ -20,5 +20,11 @@ if (!requireNamespace("BiocManager", quietly = TRUE)) {
 if (!requireNamespace("STRINGdb", quietly = TRUE)) {
   BiocManager::install("STRINGdb", update = FALSE, ask = FALSE)
 }
+
+# Instalamos igraph para cambiar el formato de la red de STRINGdb
+if (!requireNamespace("igraph", quietly = TRUE)) {
+  install.packages("igraph")
+}
+
 '
-echo "Instalación completada."
+echo "Instalación completada"
