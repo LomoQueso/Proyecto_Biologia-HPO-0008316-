@@ -21,5 +21,12 @@ echo "[INFO] Ejecutando la conversión de la red de STRINGdb a igraph..."
 echo ""
 Rscript code/stringdb_to_igraph.R
 
+# Ejecutar la visualización de la red
+echo ""
+echo "[INFO] Ejecutando la visualización de la red..."
+echo ""
+Rscript code/visualize.R
+echo "Archivo con la visualización de la red creado con éxito."
+
 echo ""
 echo "Pipeline finalizado con éxito."
