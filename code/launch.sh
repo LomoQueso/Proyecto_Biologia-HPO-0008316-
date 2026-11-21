@@ -28,5 +28,12 @@ echo ""
 Rscript code/visualize.R
 echo "Archivo con la visualización de la red creado con éxito."
 
+# Ejecutar el clustering de la red
+echo ""
+echo "[INFO] Ejecutando el clustering de la red con Louvain..."
+echo ""
+Rscript code/clustering.R
+echo "Ejecución de la red completada con éxito"
+
 echo ""
 echo "Pipeline finalizado con éxito."
