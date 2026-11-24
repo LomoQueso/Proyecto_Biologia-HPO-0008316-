@@ -1,4 +1,8 @@
 #!/bin/bash
+
+mkdir -p code/R_LIBS
+export R_LIBS_USER=code/R_LIBS
+
 echo "Instalando paquetes de R necesarios..."
 
 Rscript -e '

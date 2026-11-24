@@ -1,4 +1,7 @@
-#!/bin/bash
+
+export R_LIBS_USER=code/R_LIBS
+mkdir -p ../results/data
+
 echo "=========================================="
 echo " INICIANDO ANÁLISIS - FENOTIPO HP:0008316 "
 echo "=========================================="
