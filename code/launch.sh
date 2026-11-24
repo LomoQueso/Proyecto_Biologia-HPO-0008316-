@@ -38,5 +38,12 @@ echo ""
 Rscript code/clustering.R
 echo "Ejecución de la red completada con éxito"
 
+# Ejecutar el enriquecimiento funcional
+echo ""
+echo "[INFO] Ejecutando el análisis de enriquecimiento funcional..."
+echo ""
+Rscript code/functional_enrichment.R
+echo "Ejecución del análisis de enriquecimiento funcional completado con éxito" 
+
 echo ""
 echo "Pipeline finalizado con éxito."
