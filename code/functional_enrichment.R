@@ -139,4 +139,60 @@ if (length(clusters_with_terms) > 0) {
 
 }
 
+
+# 4. Refinamiento funcional (simplificación semántica y análisis multiontología BP, MF y CC)
+
+cat("\n--- REFINAMIENTO FUNCIONAL: SIMPLIFICACIÓN GO-BP Y MULTIONTOLOGÍA (BP, MF, CC) ---\n")
+
+if (!is.null(g2p)) {
+  # 4.1. Eliminación de redundancia jerárquica en GO-BP (universo HPO)
+  enrich_bp_simp <- simplify(enrich_results_hpo, cutoff = 0.7, by = "p.adjust", select_fun = min)
+  write.csv2(as.data.frame(enrich_bp_simp), file = "results/data/GO_enrichment_hpo_simplified.csv", row.names = FALSE)
+
+  # 4.2. Enriquecimiento en Función Molecular (MF) y Componente Celular (CC) con universo HPO
+  enrich_mf <- enrichGO(
+    gene          = genes$name,
+    universe      = unique(g2p$gene_symbol),
+    OrgDb         = org.Hs.eg.db,
+    keyType       = "SYMBOL",
+    ont           = "MF",
+    pAdjustMethod = "BH",
+    pvalueCutoff  = 0.05,
+    qvalueCutoff  = 0.2
+  )
+  enrich_mf_simp <- simplify(enrich_mf, cutoff = 0.7, by = "p.adjust", select_fun = min)
+  write.csv2(as.data.frame(enrich_mf_simp), file = "results/data/GO_MF_enrichment_hpo.csv", row.names = FALSE)
+
+  enrich_cc <- enrichGO(
+    gene          = genes$name,
+    universe      = unique(g2p$gene_symbol),
+    OrgDb         = org.Hs.eg.db,
+    keyType       = "SYMBOL",
+    ont           = "CC",
+    pAdjustMethod = "BH",
+    pvalueCutoff  = 0.05,
+    qvalueCutoff  = 0.2
+  )
+  enrich_cc_simp <- simplify(enrich_cc, cutoff = 0.7, by = "p.adjust", select_fun = min)
+  write.csv2(as.data.frame(enrich_cc_simp), file = "results/data/GO_CC_enrichment_hpo.csv", row.names = FALSE)
+
+  # 4.3. Exportación de gráficos (dotplot y barplot) en PDF
+  pdf("results/GO_Enrichment_Refined.pdf", width = 10, height = 8)
+
+  if (nrow(as.data.frame(enrich_bp_simp)) > 0) {
+    print(dotplot(enrich_bp_simp, showCategory = 10, title = "GO-BP Simplificado (Universo HPO)"))
+    print(barplot(enrich_bp_simp, showCategory = 10, title = "GO-BP Simplificado (Universo HPO)"))
+  }
+
+  if (nrow(as.data.frame(enrich_mf_simp)) > 0) {
+    print(dotplot(enrich_mf_simp, showCategory = 10, title = "GO-MF Simplificado (Universo HPO)"))
+  }
+
+  if (nrow(as.data.frame(enrich_cc_simp)) > 0) {
+    print(dotplot(enrich_cc_simp, showCategory = 10, title = "GO-CC Simplificado (Universo HPO)"))
+  }
+
+ 
+}
+
 cat("\nEnriquecimiento funcional completado con éxito.\n")
