@@ -72,3 +72,42 @@ cat("Diámetro:", diametro, "\n")
 assortativity <- assortativity_degree(g)
 cat("Grado de asortatividad:", assortativity, "\n")
 
+
+cat("\n")
+cat("\n--- PRUEBA DE ALEATORIEDAD DE LA RED ---\n")
+cat("\n")
+
+set.seed(42)
+n_sim <- 100
+
+# Generamos 100 redes aleatorias con el mismo número de nodos y aristas que nuestra red
+q_random <- replicate(n_sim, {
+	g_grand <- sample_gnm(n = gorder(g), m = gsize(g), directed = FALSE)
+	modularity(cluster_louvain(g_grand))
+})
+
+# Calcular p-valor empírico
+
+p_emp <- mean(q_random >= modularidad)
+
+# Mostrar datos
+
+cat("Modularidad observada:", modularidad, "\n")
+cat("Modularidad media aleatoria:", mean(q_random), "(SD:", sd(q_random), ")\n")
+cat("p-valor empírico:", p_emp, "\n")
+
+# Guardamos la gráfica comparativa en un PDF
+output_pdf <- "results/Net_modularity.pdf"
+
+pdf(file = output_pdf, width = 8, height = 6)
+
+# Ajuste del eje X para que quepa todo
+x_limits <- range(c(0, q_random, modularidad)) * c(0.9, 1.15)
+
+# Creación de la gráfica comparativa
+hist(q_random, xlim = x_limits, col = "grey80", border = "black", main = "Q en redes aleatorias equivalentes",
+	 xlab = "Modularidad Q", ylab = "Frequency")
+
+abline(v = modularidad, col = "red", lwd = 3)
+
+cat("Gráfica guardada en:", output_pdf, "\n")
