@@ -31,6 +31,13 @@ echo ""
 Rscript code/visualize.R
 echo "Archivo con la visualización de la red creado con éxito."
 
+# Ejecutar análisis por compartimento celular
+echo ""
+echo "[INFO] Ejecutando el análisis por compartimento celular..."
+echo ""
+Rscript code/cellular_compartment.R
+echo "Análisis por compartimento celular completado con éxito."
+
 # Ejecutar el clustering de la red
 echo ""
 echo "[INFO] Ejecutando el clustering de la red con Louvain..."
