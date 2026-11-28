@@ -31,18 +31,40 @@ go_cc <- suppressMessages(AnnotationDbi::select(
   keytype = "SYMBOL",
   columns = c("GOALL", "ONTOLOGYALL")
 ))
-
 mito_genes <- unique(go_cc$SYMBOL[!is.na(go_cc$GOALL) & go_cc$GOALL == "GO:0005739"])
 
-# Clasificar los nodos de la red según su compartimento celular
-V(g)$is_mitochondrial <- V(g)$name %in% mito_genes
-V(g)$compartment      <- ifelse(V(g)$is_mitochondrial, "Mitocondria", "Otro compartimento")
+# 3. Consultar localización cromosómica en org.Hs.eg.db para separar ADN mitocondrial (CHR == "MT") vs nuclear
+chr_info <- suppressMessages(AnnotationDbi::select(
+  org.Hs.eg.db,
+  keys    = V(g)$name,
+  keytype = "SYMBOL",
+  columns = "CHR"
+))
+mt_dna_genes <- unique(chr_info$SYMBOL[!is.na(chr_info$CHR) & chr_info$CHR == "MT"])
 
-# 3. Resumen por pantalla y guardado de tabla en results/data/
-cat("\n--- ANÁLISIS POR COMPARTIMENTO CELULAR (GO:0005739) ---\n")
+# Clasificar los nodos de la red según su compartimento celular y origen genómico
+V(g)$is_mitochondrial <- V(g)$name %in% mito_genes
+V(g)$is_mt_dna        <- V(g)$name %in% mt_dna_genes
+V(g)$chromosome       <- chr_info$CHR[match(V(g)$name, chr_info$SYMBOL)]
+
+V(g)$compartment      <- ifelse(V(g)$is_mitochondrial, "Mitocondria", "Otro compartimento")
+V(g)$subgroup    <- ifelse(
+  !V(g)$is_mitochondrial,
+  "Otro compartimento",
+  ifelse(V(g)$is_mt_dna, "Mitocondria (ADN mitocondrial)", "Mitocondria (ADN nuclear)")
+)
+
+# Conteos por grupo
+n_mt_dna  <- sum(V(g)$is_mitochondrial & V(g)$is_mt_dna)
+n_nuc_dna <- sum(V(g)$is_mitochondrial & !V(g)$is_mt_dna)
+n_other   <- sum(!V(g)$is_mitochondrial)
+
+# 4. Resumen por pantalla y guardado de tabla en results/data/
+cat("\n--- ANÁLISIS POR COMPARTIMENTO CELULAR Y ORIGEN GENÓMICO (GO:0005739) ---\n")
 cat("Nodos totales en la red:", gorder(g), "\n")
-cat("Genes mitocondriales en la red:", sum(V(g)$is_mitochondrial), "\n")
-cat("Genes NO mitocondriales en la red:", sum(!V(g)$is_mitochondrial), "\n")
+cat("  - Mitocondria (ADN mitocondrial, CHR = MT):", n_mt_dna, "\n")
+cat("  - Mitocondria (ADN nuclear):", n_nuc_dna, "\n")
+cat("  - Otro compartimento:", n_other, "\n")
 
 non_mito_net <- V(g)$name[!V(g)$is_mitochondrial]
 if (length(non_mito_net) > 0) {
@@ -53,6 +75,9 @@ dir.create("results/data", recursive = TRUE, showWarnings = FALSE)
 compartment_df <- data.frame(
   gene        = V(g)$name,
   compartment = V(g)$compartment,
+  subgroup    = V(g)$subgroup,
+  chromosome  = V(g)$chromosome,
+  grado       = degree(g),
   stringsAsFactors = FALSE
 )
 write.table(
@@ -63,11 +88,11 @@ write.table(
   row.names = FALSE
 )
 
-# 4. Visualización destacando los genes mitocondriales sobre el resto
-V(g)$color       <- ifelse(V(g)$is_mitochondrial, "#E64B35", "#4DBBD5")
-V(g)$size        <- ifelse(V(g)$is_mitochondrial, 8, 6)
-V(g)$label.color <- ifelse(V(g)$is_mitochondrial, "black", "gray30")
-V(g)$label.font  <- ifelse(V(g)$is_mitochondrial, 2, 1)
+# 5. Visualización destacando los genes mitocondriales(Rojo/Salmón) sobre el resto
+V(g)$color       <- ifelse(!V(g)$is_mitochondrial, "#4DBBD5", ifelse(V(g)$is_mt_dna, "#D73027", "#F4A582"))
+V(g)$size        <- 8
+V(g)$label.color <- "black"
+V(g)$label.font  <- 2
 
 pdf("results/Network_Mitochondrial_Compartment.pdf", width = 11, height = 10)
 set.seed(123)
@@ -78,16 +103,17 @@ plot(
   layout           = layout_fr,
   vertex.label.cex = 0.75,
   edge.color       = "gray80",
-  main             = "Red de Interacción por Compartimento Celular (HP:0008316)"
+  main             = "Red de Interacción por Compartimento Celular y Origen Genómico (HP:0008316)"
 )
 
 legend(
   "topleft",
   legend = c(
-    paste0("Mitocondria (n = ", sum(V(g)$is_mitochondrial), ")"),
-    paste0("Otro compartimento (n = ", sum(!V(g)$is_mitochondrial), ")")
+    paste0("Mitocondria - ADN mitocondrial (n = ", n_mt_dna, ")"),
+    paste0("Mitocondria - ADN nuclear (n = ", n_nuc_dna, ")"),
+    paste0("Otro compartimento (n = ", n_other, ")")
   ),
-  col    = c("#E64B35", "#4DBBD5"),
+  col    = c("#D73027", "#F4A582", "#4DBBD5"),
   pch    = 19,
   pt.cex = 1.8,
   bty    = "n",
